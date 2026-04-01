@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@theme {
+  /* Core Brand Colors */
+  --color-primary: #006D77;
+  --color-primary-dark: #004D54;
+  --color-primary-light: #83C5BE;
+  --color-secondary: #EDF6F9;
+  --color-accent: #E29578;
+  
+  /* Semantic Colors */
+  --color-background: #F8FBFC;
+  --color-foreground: #1A202C;
+  --color-card: #FFFFFF;
+  --color-card-border: #EDF2F7;
+  --color-text-muted: #718096;
+  --color-success: #2F855A;
+  --color-danger: #A13D3D;
+  --color-warning: #D69E2E;
+
+  /* Glassmorphism Tokens */
+  --color-glass-white: rgba(255, 255, 255, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.2);
+
+  /* Radius & Spacing (v4 style) */
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 3rem;
+  
+  /* Shadows */
+  --shadow-premium: 0 10px 30px -10px rgba(0, 109, 119, 0.15);
+  --shadow-glass: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
+
+  /* Animations */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-card-border outline-primary/20;
+  }
+  
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    @apply antialiased selection:bg-primary/20 selection:text-primary;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/10 hover:bg-primary/20 rounded-full transition-colors;
+  }
+}
+
+@layer utilities {
+  .premium-card {
+    @apply bg-card border border-card-border rounded-xl shadow-premium p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+
+  .glass-card {
+    @apply bg-glass-white backdrop-blur-xl border border-glass-border shadow-glass rounded-2xl;
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  }
+
+  .gradient-subtle {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FBFC 100%);
+  }
+
+  .shimmer-effect {
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-dark;
+  }
+
+  .badge-premium {
+    @apply px-3 py-1 bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider rounded-full border border-primary/20;
+  }
+
+  .stat-trend-up {
+    @apply flex items-center text-success text-sm font-medium gap-1;
+  }
+
+  .stat-trend-down {
+    @apply flex items-center text-danger text-sm font-medium gap-1;
+  }
+
+  /* Architectural Drawing Aesthetic Component (as mentioned in README) */
+  .architect-card {
+    background-color: #002D32;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    @apply border border-white/10 rounded-2xl p-6 text-white overflow-hidden relative shadow-2xl;
+  }
+}
