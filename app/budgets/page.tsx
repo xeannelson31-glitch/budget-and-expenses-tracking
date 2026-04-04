@@ -376,6 +376,6 @@ export default function Budgets() {
   );
 }
 
-function cn(...inputs: any[]) {
+function cn(...inputs: (string | number | boolean | undefined | null)[]) {
   return inputs.filter(Boolean).join(' ');
 }

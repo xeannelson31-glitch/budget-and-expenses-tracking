@@ -108,7 +108,8 @@ Actions:
       }
 
       setMessages(prev => [...prev, { role: "assistant", content: botReply }]);
-    } catch (e: any) {
+    } catch (err: unknown) {
+      const e = err as Error;
       setMessages(prev => [...prev, { role: "assistant", content: `Oops! Connecting to Groq failed. Reason: ${e.message}` }]);
     } finally {
       setIsLoading(false);

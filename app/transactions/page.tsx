@@ -195,6 +195,6 @@ export default function Transactions() {
   );
 }
 
-function cn(...inputs: any[]) {
+function cn(...inputs: (string | number | boolean | undefined | null)[]) {
   return inputs.filter(Boolean).join(' ');
 }

@@ -12,6 +12,14 @@ export const metadata: Metadata = {
   description: "Track your expenses, manage budgets, and get AI-driven financial insights.",
 };
 
+export const viewport = {
+  themeColor: "#006D77",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default function RootLayout({
   children,
 }: {
