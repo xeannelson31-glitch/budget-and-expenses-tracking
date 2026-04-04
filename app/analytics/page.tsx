@@ -1,11 +1,19 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RePieChart, Pie } from "recharts";
-import { Sparkles, TrendingUp } from "lucide-react";
+import { Sparkles, TrendingUp, Loader2, Send } from "lucide-react";
 import { useFinance } from "@/components/FinanceContext";
 
 export default function Analytics() {
   const { transactions, budgets, lastUpdated } = useFinance();
+  const [mounted, setMounted] = useState(false);
+  const [aiSummary, setAiSummary] = useState<{why: string; how: string; what: string} | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Metrics calculation
   const totalIncome = transactions
@@ -33,32 +41,108 @@ export default function Analytics() {
     color: pieColors[idx % pieColors.length]
   }));
 
+  // Generate AI Summary Effect
+  useEffect(() => {
+    const generateSummary = async () => {
+      if (pieData.length === 0 || isGenerating) return;
+      
+      setIsGenerating(true);
+      try {
+        const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim();
+        if (!groqKey) return;
+
+        const dataContext = JSON.stringify({
+          expenses: pieData,
+          budgets: budgets.map(b => ({ name: b.name, limit: b.total, spent: b.spent, percent: b.percent }))
+        });
+
+        const prompt = `Analyze this spending allocation: ${dataContext}. 
+        Provide a concise summary in THREE parts: 
+        1. WHY: Explain the primary reason for this allocation pattern based on the largest expenses.
+        2. HOW: Explain how the user is tracking against their budget limits.
+        3. WHAT: Give one specific, actionable action the user should take right now.
+        Format your response as a JSON object: {"why": "...", "how": "...", "what": "..."}`;
+
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${groqKey}`
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [{ role: "system", content: "You are a financial analyst. Always reply in JSON." }, { role: "user", content: prompt }],
+            response_format: { type: "json_object" }
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({ error: { message: response.statusText } }));
+          throw new Error(errData.error?.message || response.statusText);
+        }
+
+        const data = await response.json();
+        const result = JSON.parse(data.choices[0].message.content);
+        setAiSummary(result);
+      } catch (e) {
+        console.error("AI Summary generation failed", e);
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    const timer = setTimeout(generateSummary, 1000); // Debounce
+    return () => clearTimeout(timer);
+  }, [transactions, budgets]);
+
+  const [userQuery, setUserQuery] = useState("");
+  const [queryResponse, setQueryResponse] = useState("");
+
+  const handleAskAI = async () => {
+    if (!userQuery.trim() || isGenerating) return;
+    
+    setIsGenerating(true);
+    setQueryResponse("");
+    try {
+      const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim();
+      const dataContext = JSON.stringify({
+        expenses: pieData,
+        budgets: budgets.map(b => ({ name: b.name, limit: b.total, spent: b.spent, percent: b.percent }))
+      });
+
+      const prompt = `Context: ${dataContext}\n\nUser Question: ${userQuery}\n\nProvide a professional, concise financial advice based ONLY on this data. Use 1-2 sentences.`;
+
+      // Use Groq for financial insights
+      if (groqKey) {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [{ role: "system", content: "You are a concise financial advisor." }, { role: "user", content: prompt }]
+          })
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setQueryResponse(data.choices[0].message.content);
+        } else {
+            throw new Error("AI provider failed");
+        }
+      }
+    } catch (e) {
+      setQueryResponse("Unable to get AI insight right now. Please check your connection.");
+    } finally {
+      setIsGenerating(false);
+      setUserQuery("");
+    }
+  };
+
   const topCategoryStr = pieData.sort((a,b) => b.value - a.value)[0]?.name || "N/A";
   const topCategoryVal = pieData.sort((a,b) => b.value - a.value)[0]?.value || 0;
 
   const currentMonthName = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
   const currentMonthValue = budgets.reduce((acc, b) => acc + b.total, 0);
   const currentMonthSpent = budgets.reduce((acc, b) => acc + b.spent, 0);
-
-  // Generate Dynamic Allocation Summary
-  let dynamicInsight = "Start spending and tracking to receive AI-powered financial insights.";
-  if (pieData.length > 0) {
-    const sortedSpends = [...pieData].sort((a,b) => b.value - a.value);
-    const topSpender = sortedSpends[0];
-    const topBudget = budgets.find(b => b.name.toLowerCase() === topSpender.name.toLowerCase());
-    
-    if (topBudget) {
-      if (topBudget.percent >= 90) {
-        dynamicInsight = `Warning! "${topSpender.name}" is eating up most of your funds and is at ${topBudget.percent}% capacity. Try to curb expenses here to avoid maxing out your budget limit.`;
-      } else if (topBudget.percent < 50) {
-        dynamicInsight = `Awesome pacing! Even though "${topSpender.name}" is your highest expense right now, it is safely only ${topBudget.percent}% consumed. Keep this healthy trend up!`;
-      } else {
-        dynamicInsight = `Your spending allocation is heavily leaning towards "${topSpender.name}" (₱${topSpender.value.toLocaleString()}). Since it's at ${topBudget.percent}%, monitor it closely as the month progresses.`;
-      }
-    } else {
-      dynamicInsight = `Your highest allocation is currently "${topSpender.name}" at ₱${topSpender.value.toLocaleString()}. Make sure this aligns with your general savings goals.`;
-    }
-  }
 
   const barData = [
     { name: "NOV", value: currentMonthValue * 0.9, current: currentMonthSpent * 0.8 },
@@ -68,6 +152,17 @@ export default function Analytics() {
     { name: "MAR", value: currentMonthValue * 1.05, current: currentMonthSpent * 0.95 },
     { name: currentMonthName, value: currentMonthValue, current: currentMonthSpent },
   ];
+
+  if (!mounted) return (
+    <div className="flex items-center justify-center min-h-screen bg-white/50 backdrop-blur-sm">
+        <div className="relative">
+            <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center shadow-premium animate-pulse">
+                <span className="text-white font-black text-3xl">S</span>
+            </div>
+            <Loader2 className="w-20 h-20 text-primary/20 animate-spin absolute -top-2 -left-2" />
+        </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-8 py-6 pb-24 animate-scale-in">
@@ -139,7 +234,10 @@ export default function Analytics() {
 
       {/* Spending Allocation Donut Chart */}
       <section className="premium-card bg-[#F0F9FB] border-none p-6 shadow-sm flex flex-col gap-4 group">
-        <h3 className="text-xl font-black text-foreground tracking-tighter mb-4">Spending Allocation</h3>
+        <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xl font-black text-foreground tracking-tighter uppercase">Spending Allocation</h3>
+            {isGenerating && <Loader2 className="w-4 h-4 text-primary animate-spin" />}
+        </div>
         
         <div className="grid grid-cols-2 gap-4 items-center">
           <div className="h-44 w-full relative">
@@ -176,24 +274,35 @@ export default function Analytics() {
             ))}
           </div>
         </div>
+
+        {/* Dynamic Summary Panel */}
+        {aiSummary && (
+          <div className="mt-4 grid grid-cols-3 gap-3 animate-scale-in">
+              <div className="flex flex-col gap-1 p-3 bg-white rounded-2xl shadow-sm border border-primary/5 hover:border-primary/20 transition-all group">
+                  <div className="flex items-center gap-1.5 mb-1">
+                      <div className="w-1.5 h-1.5 bg-primary rounded-full group-hover:scale-125 transition-transform"></div>
+                      <span className="text-[9px] font-black text-primary tracking-widest uppercase">Why</span>
+                  </div>
+                  <p className="text-[10px] font-bold text-text-muted leading-tight line-clamp-3">{aiSummary.why}</p>
+              </div>
+              <div className="flex flex-col gap-1 p-3 bg-white rounded-2xl shadow-sm border border-primary/5 hover:border-primary/20 transition-all group">
+                  <div className="flex items-center gap-1.5 mb-1">
+                      <div className="w-1.5 h-1.5 bg-[#2B4C5F] rounded-full group-hover:scale-125 transition-transform"></div>
+                      <span className="text-[9px] font-black text-[#2B4C5F] tracking-widest uppercase">How</span>
+                  </div>
+                  <p className="text-[10px] font-bold text-text-muted leading-tight line-clamp-3">{aiSummary.how}</p>
+              </div>
+              <div className="flex flex-col gap-1 p-3 bg-white rounded-2xl shadow-sm border border-primary/5 hover:border-primary/20 transition-all group">
+                  <div className="flex items-center gap-1.5 mb-1">
+                      <div className="w-1.5 h-1.5 bg-accent rounded-full group-hover:scale-125 transition-transform"></div>
+                      <span className="text-[9px] font-black text-accent tracking-widest uppercase">What</span>
+                  </div>
+                  <p className="text-[10px] font-bold text-text-muted leading-tight line-clamp-3">{aiSummary.what}</p>
+              </div>
+          </div>
+        )}
       </section>
 
-      {/* AI Strategy Insight Card */}
-      <section className="premium-card bg-[#E0F3F5] border-none p-6 shadow-sm flex flex-col gap-4 relative overflow-hidden group mb-4">
-        <div className="flex items-start gap-4">
-          <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg">
-            <Sparkles className="w-7 h-7" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-black text-primary uppercase tracking-[0.15em] opacity-80">Allocation Summary</h3>
-            <p className="text-sm font-bold text-foreground/80 leading-relaxed tracking-tight">
-              {dynamicInsight}
-            </p>
-          </div>
-        </div>
-        {/* Background Sparkles Effect Placeholder */}
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-[40px] group-hover:scale-110 transition-transform"></div>
-      </section>
     </div>
   );
 }

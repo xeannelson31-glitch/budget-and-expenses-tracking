@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CopySlash, LayoutGrid, ReceiptText, Wallet, BarChart3 } from "lucide-react";
+import { LayoutGrid, ReceiptText, Wallet, BarChart3 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import ChatWidget from "./ChatWidget";
@@ -22,8 +22,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <>
-      <nav className="fixed bottom-0 w-full bg-white border-t border-gray-100 flex items-center justify-around z-50 px-2 py-2 h-20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] rounded-t-3xl text-[#929fb0] max-w-screen-2xl left-1/2 -translate-x-1/2">
+    <nav className="fixed bottom-0 w-full bg-white border-t border-gray-100 flex items-center justify-around z-50 px-2 py-2 h-20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] rounded-t-3xl text-[#929fb0] max-w-screen-2xl left-1/2 -translate-x-1/2">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -42,9 +41,6 @@ export default function BottomNav() {
             </Link>
           );
         })}
-      </nav>
-      {/* AI Chat Bot Component */}
-      <ChatWidget />
-    </>
+    </nav>
   );
 }

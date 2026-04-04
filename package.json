@@ -11,7 +11,7 @@
   "dependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@supabase/ssr": "^0.10.0",
-    "@supabase/supabase-js": "^2.101.0",
+    "@supabase/supabase-js": "^2.101.1",
     "@tailwindcss/oxide-win32-x64-msvc": "^4.2.2",
     "@types/pg": "^8.20.0",
     "clsx": "^2.1.1",

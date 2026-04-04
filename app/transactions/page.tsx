@@ -3,7 +3,7 @@
 import { Search, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useFinance, Transaction } from "@/components/FinanceContext";
-import { getIcon } from "@/app/page";
+import { getIcon } from "@/lib/getIcon";
 
 const filters = ["All", "Income", "Expenses", "Recurring"];
 
@@ -68,7 +68,7 @@ export default function Transactions() {
             className={cn(
               "px-8 py-4 rounded-2xl text-base font-black tracking-tighter transition-all duration-300 whitespace-nowrap",
               activeFilter === filter 
-                ? "bg-[#006D77] text-white shadow-xl shadow-primary/20 scale-105" 
+                ? "bg-primary text-white shadow-xl shadow-primary/20 scale-105" 
                 : "bg-[#F0F5F6] text-[#2B4C5F] hover:bg-white hover:shadow-md"
             )}
           >
@@ -101,12 +101,12 @@ export default function Transactions() {
                           {tx.name}
                           {tx.type === 'recurring' && <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] uppercase tracking-widest rounded-md">Recurring</span>}
                         </span>
-                        <span className="text-[11px] text-text-muted font-bold tracking-tight opacity-70 uppercase tracking-widest">{tx.category} • {tx.date.split(",")[1]?.trim() || "12:00 PM"}</span>
+                        <span className="text-[11px] text-text-muted font-bold opacity-70 uppercase tracking-widest">{tx.category} • {tx.date.split(",")[1]?.trim() || "12:00 PM"}</span>
                       </div>
                     </div>
                     <span className={cn(
                       "text-lg font-black tracking-tight",
-                      tx.type === 'income' ? "text-primary" : "text-[#A13D3D]"
+                      tx.type === 'income' ? "text-primary" : "text-danger"
                     )}>
                       {tx.type === 'income' ? '+' : '-'}₱{Math.abs(tx.amount).toFixed(2)}
                     </span>
@@ -145,7 +145,7 @@ export default function Transactions() {
         ) : !isSettingLimit ? (
           <button 
             onClick={() => setIsSettingLimit(true)}
-            className="bg-[#006D77] text-white py-4 px-8 rounded-2xl font-black text-sm tracking-tighter uppercase shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all relative z-10 w-full sm:w-fit self-start"
+            className="bg-primary text-white py-4 px-8 rounded-2xl font-black text-sm tracking-tighter uppercase shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all relative z-10 w-full sm:w-fit self-start"
           >
             Set Dining Limit
           </button>
@@ -168,7 +168,7 @@ export default function Transactions() {
                   if(diningLimit) setSavedLimit(diningLimit);
                   setIsSettingLimit(false);
                 }}
-                className="bg-[#006D77] text-white py-4 px-6 rounded-2xl font-black text-sm tracking-tighter uppercase shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex-1"
+                className="bg-primary text-white py-4 px-6 rounded-2xl font-black text-sm tracking-tighter uppercase shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex-1"
               >
                 Save
               </button>
@@ -195,6 +195,6 @@ export default function Transactions() {
   );
 }
 
-function cn(...inputs: any[]) {
+function cn(...inputs: Array<string | number | boolean | null | undefined>) {
   return inputs.filter(Boolean).join(' ');
 }

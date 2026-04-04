@@ -32,13 +32,8 @@ export default function ChatWidget() {
     setIsLoading(true);
 
     try {
-      const chatHistory = messages
-        .filter(m => !m.content.includes("```json")) 
-        .map(m => ({ role: m.role, content: m.content }));
-      
-      chatHistory.unshift({
-        role: "system",
-        content: `You are SmartBudget AI. You MUST stay strictly relevant to the user's question. 
+      const systemPrompt = `You are SmartBudget AI. You MUST stay strictly relevant to the user's question. 
+Keep your responses short and professional. 
 If the user asks you to record a transaction (income or expense), add a budget, or update/subtract from a budget, reply nicely, then append a markdown JSON codeblock.
 
 Actions:
@@ -50,34 +45,43 @@ Actions:
 \`\`\`json
 {"action":"ADD_BUDGET","data":{"name":"Travel","spent":0,"total":1000,"percent":0,"color":"bg-[#006D77]","iconName":"LayoutGrid"}}
 \`\`\`
-3. UPDATE_BUDGET_SPENT: When the user says they spent money from an existing budget.
+3. UPDATE_BUDGET_SPENT: When the user says they spent money from an existing budget. 
 \`\`\`json
 {"action":"UPDATE_BUDGET_SPENT","data":{"name":"Food & Groceries","amount":50}}
-\`\`\``
-      });
+\`\`\``;
 
+      let botReply = "";
+
+      const groqApiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim();
+      if (!groqApiKey) throw new Error("Missing Groq API key");
+
+      const chatHistory = messages
+        .filter(m => !m.content.includes("```json"))
+        .map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content }));
+      
+      chatHistory.unshift({ role: "system", content: systemPrompt });
       chatHistory.push({ role: "user", content: userMessage });
 
       const response = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`
+          "Authorization": `Bearer ${groqApiKey}`
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: "llama-3.3-70b-versatile",
           messages: chatHistory,
           temperature: 0.2
         })
       });
 
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error.message || "Unknown API Error");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({ error: { message: response.statusText } }));
+        throw new Error(errData.error?.message || response.statusText);
       }
-
-      let botReply = data.choices?.[0]?.message?.content || "Sorry, I couldn't process that.";
+      
+      const data = await response.json();
+      botReply = data.choices?.[0]?.message?.content || "Sorry, I couldn't process that.";
       
       // Check for JSON commands
       const jsonMatch = botReply.match(/```json\n?([\s\S]*?)\n?```/);
@@ -108,8 +112,9 @@ Actions:
       }
 
       setMessages(prev => [...prev, { role: "assistant", content: botReply }]);
-    } catch (e: any) {
-      setMessages(prev => [...prev, { role: "assistant", content: `Oops! Connecting to Groq failed. Reason: ${e.message}` }]);
+    } catch (error) {
+      const e = error instanceof Error ? error : new Error(String(error));
+      setMessages(prev => [...prev, { role: "assistant", content: `Oops! AI failed. Reason: ${e.message}` }]);
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +148,7 @@ Actions:
   return (
     <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end">
       {isOpen && (
-        <div className="mb-4 w-[calc(100vw-32px)] sm:w-[350px] h-[450px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-[#1C695D]/10 animate-scale-in origin-bottom-right">
+        <div className="mb-4 w-[calc(100vw-32px)] sm:w-87.5 h-112.5 bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-[#1C695D]/10 animate-scale-in origin-bottom-right">
           {/* Header */}
           <div className="bg-[#1C695D] text-white p-4 flex items-center justify-between shadow-md z-10">
             <div className="flex items-center gap-3">
@@ -152,7 +157,7 @@ Actions:
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-sm leading-tight tracking-tight">AI Assistant</span>
-                <span className="text-[10px] text-white/70 font-bold uppercase tracking-widest">Online</span>
+                <span className="text-[10px] text-white/70 font-medium">Powered by GROQ</span>
               </div>
             </div>
             <button 
@@ -168,7 +173,7 @@ Actions:
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="w-6 h-6 rounded-full bg-[#1C695D] flex-shrink-0 flex items-center justify-center shadow-sm mt-1">
+                  <div className="w-6 h-6 rounded-full bg-[#1C695D] shrink-0 flex items-center justify-center shadow-sm mt-1">
                     <span className="text-white text-[9px] font-black">AI</span>
                   </div>
                 )}
@@ -183,7 +188,7 @@ Actions:
             ))}
             {isLoading && (
               <div className="flex gap-2">
-                <div className="w-6 h-6 rounded-full bg-[#1C695D] flex-shrink-0 flex items-center justify-center shadow-sm mt-1">
+                <div className="w-6 h-6 rounded-full bg-[#1C695D] shrink-0 flex items-center justify-center shadow-sm mt-1">
                   <span className="text-white text-[9px] font-black">AI</span>
                 </div>
                 <div className="bg-white px-4 py-3 shadow-sm rounded-2xl rounded-tl-sm border border-black/5 flex items-center gap-1.5">
@@ -205,7 +210,7 @@ Actions:
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                 placeholder="Ask me anything..." 
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-4 pr-12 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#1C695D]/30 transition-all font-bold placeholder:font-normal"
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-4 pr-12 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#1C695D]/30 transition-all placeholder:font-normal"
               />
               <button 
                 onClick={sendMessage}

@@ -1,9 +1,9 @@
 "use client";
 
-import { Lightbulb, Plus, X, Trash2, Search } from "lucide-react";
+import { Lightbulb, Plus, X, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useFinance } from "@/components/FinanceContext";
-import { getIcon } from "@/app/page";
+import { getIcon } from "@/lib/getIcon";
 
 export default function Budgets() {
   const { budgets, addBudget, deleteBudget, updateBudgetSpent, addTransaction, updateBudgetIcon } = useFinance();
@@ -96,7 +96,7 @@ export default function Budgets() {
     <div className="flex flex-col gap-8 py-6 pb-24 animate-scale-in">
       {/* Budget Overview Header */}
       <section className="flex flex-col px-1">
-        <p className="text-text-muted font-bold tracking-tight text-[10px] mb-1 opacity-70 uppercase tracking-[0.2em] font-black">Current Month</p>
+        <p className="text-text-muted font-black text-[10px] mb-1 opacity-70 uppercase tracking-[0.2em]">Current Month</p>
         <h2 className="text-5xl font-black text-foreground tracking-tighter leading-tight">
           Budget Overview
         </h2>
@@ -174,7 +174,7 @@ export default function Budgets() {
           <div className="flex flex-col gap-1">
             <h3 className="text-xl font-black text-[#2B4C5F] tracking-tighter">Architect Insight</h3>
             <p className="text-xs font-bold text-[#2B4C5F]/70 leading-relaxed tracking-tight">
-              You have a <span className="text-[#006D77] font-black decoration-[#006D77]/20 underline underline-offset-4 decoration-2">surplus of ₱142</span> in &quot;Entertainment&quot; this month. Consider moving these funds to your &quot;High-Yield Savings&quot; goal to accelerate your downpayment target by 12 days.
+              You have a <span className="text-primary font-black decoration-primary/20 underline underline-offset-4 decoration-2">surplus of ₱142</span> in &quot;Entertainment&quot; this month. Consider moving these funds to your &quot;High-Yield Savings&quot; goal to accelerate your downpayment target by 12 days.
             </p>
           </div>
         </div>
@@ -212,7 +212,7 @@ export default function Budgets() {
             )}
             <button 
               onClick={() => setShowBudgetInput(!showBudgetInput)}
-              className="w-10 h-10 rounded-full bg-[#006D77] flex items-center justify-center text-white shadow-lg shadow-primary/30 hover:scale-110 active:scale-95 transition-all outline outline-4 outline-white shrink-0"
+              className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30 hover:scale-110 active:scale-95 transition-all outline-4 outline-white shrink-0"
               style={{ transform: showBudgetInput ? 'rotate(45deg)' : 'none' }}
             >
               <Plus className="w-6 h-6" />
@@ -245,7 +245,7 @@ export default function Budgets() {
             </div>
             <button 
               onClick={handleAddBudget}
-              className="bg-[#006D77] text-white px-6 py-3 rounded-xl text-sm font-black shadow-md hover:scale-[1.02] active:scale-95 transition-transform w-full sm:w-auto self-end uppercase tracking-widest mt-1"
+              className="bg-primary text-white px-6 py-3 rounded-xl text-sm font-black shadow-md hover:scale-[1.02] active:scale-95 transition-transform w-full sm:w-auto self-end uppercase tracking-widest mt-1"
             >
               Add Budget
             </button>
@@ -306,7 +306,7 @@ export default function Budgets() {
                 </div>
                 <span className="font-black text-sm text-foreground">{category.percent}%</span>
               </div>
-              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner flex shrink-0 min-h-[10px]">
+              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner flex shrink-0 min-h-2.5">
                 <div 
                   className={cn("h-full transition-all duration-1000", category.color)} 
                   style={{ width: `${Math.min(100, category.percent)}%` }}
@@ -376,6 +376,6 @@ export default function Budgets() {
   );
 }
 
-function cn(...inputs: any[]) {
+function cn(...inputs: Array<string | number | boolean | null | undefined>) {
   return inputs.filter(Boolean).join(' ');
 }

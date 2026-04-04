@@ -135,7 +135,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     setBudgets(prev => prev.map(b => {
       if (b.name.toLowerCase() === name.toLowerCase()) {
         const newSpent = b.spent + amount;
-        return { ...b, spent: newSpent, percent: Math.round((newSpent / b.total) * 100) };
+        const percent = b.total > 0 ? Math.round((newSpent / b.total) * 100) : 0;
+        return { ...b, spent: newSpent, percent };
       }
       return b;
     }));

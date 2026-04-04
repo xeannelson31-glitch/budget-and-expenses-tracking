@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell, User, Search } from "lucide-react";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useFinance } from "./FinanceContext";
 import { useRouter } from "next/navigation";
@@ -127,10 +128,8 @@ export default function Header() {
           </div>
         )}
 
-        <div onClick={() => {setShowProfile(!showProfile); setShowSearch(false); setShowNotifs(false);}} className="w-10 h-10 rounded-full bg-primary/20 border-2 border-primary/10 overflow-hidden cursor-pointer hover:border-primary/40 transition-all">
-          <div className="w-full h-full flex items-center justify-center bg-slate-100">
-            {userProfilePic ? <img src={userProfilePic} alt="User Profile" className="w-full h-full object-cover" /> : <User className="w-6 h-6 text-primary" />}
-          </div>
+        <div onClick={() => {setShowProfile(!showProfile); setShowSearch(false); setShowNotifs(false);}} className="w-10 h-10 rounded-full bg-primary/20 border-2 border-primary/10 overflow-hidden cursor-pointer hover:border-primary/40 transition-all flex items-center justify-center">
+            {userProfilePic ? <Image src={userProfilePic} alt="User Profile" width={40} height={40} className="w-full h-full object-cover" unoptimized /> : <User className="w-6 h-6 text-primary" />}
         </div>
         {showProfile && (
           <div className="absolute top-full right-0 mt-4 w-64 bg-white rounded-2xl shadow-2xl border border-primary/10 p-4 animate-scale-in flex flex-col gap-4 z-50">

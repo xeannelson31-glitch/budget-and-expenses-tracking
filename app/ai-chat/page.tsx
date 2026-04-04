@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { MessageSquareText, Send } from "lucide-react";
+import { MessageSquareText, Send, Loader2 } from "lucide-react";
 
 export default function AiChatPage() {
   const [messages, setMessages] = useState([
     { role: "assistant", content: "Hello! I'm your SmartBudget AI assistant. How can I help you analyze your finances today?" }
   ]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -28,47 +33,50 @@ export default function AiChatPage() {
     setIsLoading(true);
 
     try {
-      // Create request payload for Groq (OpenAI-compatible)
-      const chatHistory = messages.map(m => ({ role: m.role, content: m.content }));
-      
-      // Inject system prompt at the beginning
-      chatHistory.unshift({
-        role: "system",
-        content: "You are SmartBudget AI, a highly intelligent, concise, and professional financial advisor. You help users construct budgets, analyze expenses, and provide actionable money-saving tips."
-      });
+      const systemPrompt = "You are SmartBudget AI, a highly intelligent, concise, and professional financial advisor. You help users construct budgets, analyze expenses, and provide actionable money-saving tips.";
+      let botReply = "";
 
-      // Add the latest user message
+      const groqApiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim();
+      if (!groqApiKey) throw new Error("Missing Groq API key");
+
+      const chatHistory = messages.map(m => ({ 
+        role: m.role === "assistant" ? "assistant" : "user", 
+        content: m.content 
+      }));
+      chatHistory.unshift({ role: "system", content: systemPrompt });
       chatHistory.push({ role: "user", content: userMessage });
 
       const response = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`
+          "Authorization": `Bearer ${groqApiKey}`
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: "llama-3.3-70b-versatile",
           messages: chatHistory
         })
       });
 
-      const data = await response.json();
-      
-      // If we got an error from the API
-      if (data.error) {
-        throw new Error(data.error.message || "Unknown API Error");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({ error: { message: response.statusText } }));
+        throw new Error(errData.error?.message || response.statusText);
       }
-
-      const botReply = data.choices?.[0]?.message?.content || "Sorry, I couldn't process that.";
+      
+      const data = await response.json();
+      botReply = data.choices?.[0]?.message?.content || "Sorry, I couldn't process that.";
       
       setMessages(prev => [...prev, { role: "assistant", content: botReply }]);
-    } catch (e: any) {
+    } catch (error) {
+      const e = error instanceof Error ? error : new Error(String(error));
       console.error("Chat Error:", e);
-      setMessages(prev => [...prev, { role: "assistant", content: `Oops! Connecting to Groq failed. Reason: ${e.message || "Unknown context error"}` }]);
+      setMessages(prev => [...prev, { role: "assistant", content: `Oops! Connecting to AI failed. Reason: ${e.message || "Unknown context error"}` }]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] animate-fade-in pt-4">
@@ -77,8 +85,8 @@ export default function AiChatPage() {
           <MessageSquareText className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-foreground">AI Assistant</h2>
-          <p className="text-text-muted text-sm">Powered by Groq</p>
+          <h2 className="text-2xl font-bold text-foreground">SmartBudget AI</h2>
+          <p className="text-text-muted text-sm capitalize">Powered by GROQ</p>
         </div>
       </div>
       

@@ -1,23 +1,11 @@
 "use client";
 
-import { ArrowUpRight, ArrowDownRight, Zap, Target, MoreHorizontal, ShoppingCart, Coffee, LayoutGrid, ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import { ArrowUpRight, ArrowDownRight, Zap } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useFinance, Budget, Transaction } from "@/components/FinanceContext";
-
-export function getIcon(name?: string) {
-  switch (name) {
-    case "ShoppingCart": return ShoppingCart;
-    case "Coffee": return Coffee;
-    case "LayoutGrid": return LayoutGrid;
-    case "Target": return Target;
-    default: return ShoppingBag;
-  }
-}
+import { useFinance } from "@/components/FinanceContext";
+import { getIcon } from "@/lib/getIcon";
 
 export default function Dashboard() {
-  const router = useRouter();
   const { budgets: activeBudgets, transactions: recentActivity } = useFinance();
   const [showViewAllInput, setShowViewAllInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,7 +28,7 @@ export default function Dashboard() {
     <div className="flex flex-col gap-8 py-6 pb-24 animate-scale-in">
       {/* Total Balance */}
       <section className="flex flex-col px-1">
-        <p className="text-text-muted font-bold tracking-tight text-sm mb-1 opacity-70 uppercase tracking-widest">Total Balance</p>
+        <p className="text-text-muted font-bold text-sm mb-1 opacity-70 uppercase tracking-widest">Total Balance</p>
         <h2 className="text-6xl font-black text-primary tracking-tighter">
           ₱{totalBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
         </h2>
@@ -212,6 +200,6 @@ export default function Dashboard() {
   );
 }
 
-function cn(...inputs: any[]) {
+function cn(...inputs: Array<string | number | boolean | null | undefined>) {
   return inputs.filter(Boolean).join(' ');
 }

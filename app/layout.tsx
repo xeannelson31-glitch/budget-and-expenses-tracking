@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import ChatWidget from "@/components/ChatWidget";
 import { FinanceProvider } from "@/components/FinanceContext";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -18,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-background text-foreground`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} bg-background text-foreground`} suppressHydrationWarning>
         <FinanceProvider>
           <div className="w-full mx-auto min-h-screen flex flex-col relative overflow-x-hidden shadow-2xl bg-white/50 backdrop-blur-sm">
             <Header />
@@ -27,6 +28,7 @@ export default function RootLayout({
               {children}
             </main>
             <BottomNav />
+            <ChatWidget />
           </div>
         </FinanceProvider>
       </body>
