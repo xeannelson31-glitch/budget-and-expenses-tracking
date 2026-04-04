@@ -2,7 +2,7 @@
 
 import { Bell, User, Search } from "lucide-react";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useFinance } from "./FinanceContext";
 import { useRouter } from "next/navigation";
 
@@ -16,7 +16,6 @@ export default function Header() {
   const [showProfile, setShowProfile] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [tempPicUrl, setTempPicUrl] = useState("");
 
   const searchResults = searchQuery ? [
     ...budgets.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase())).map(b => ({ type: 'budget', name: b.name, category: 'Budget Category', link: '/budgets' })),

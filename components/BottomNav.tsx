@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { LayoutGrid, ReceiptText, Wallet, BarChart3 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import ChatWidget from "./ChatWidget";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

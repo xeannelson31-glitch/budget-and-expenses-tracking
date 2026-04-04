@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RePieChart, Pie } from "recharts";
-import { Sparkles, TrendingUp, Loader2, Send } from "lucide-react";
+import { TrendingUp, Loader2 } from "lucide-react";
 import { useFinance } from "@/components/FinanceContext";
 
 export default function Analytics() {
@@ -84,8 +84,8 @@ export default function Analytics() {
         const data = await response.json();
         const result = JSON.parse(data.choices[0].message.content);
         setAiSummary(result);
-      } catch (e) {
-        console.error("AI Summary generation failed", e);
+      } catch {
+        console.error("AI Summary generation failed");
       } finally {
         setIsGenerating(false);
       }
@@ -93,49 +93,8 @@ export default function Analytics() {
 
     const timer = setTimeout(generateSummary, 1000); // Debounce
     return () => clearTimeout(timer);
-  }, [transactions, budgets]);
+  }, [transactions, budgets, pieData, isGenerating]);
 
-  const [userQuery, setUserQuery] = useState("");
-  const [queryResponse, setQueryResponse] = useState("");
-
-  const handleAskAI = async () => {
-    if (!userQuery.trim() || isGenerating) return;
-    
-    setIsGenerating(true);
-    setQueryResponse("");
-    try {
-      const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim();
-      const dataContext = JSON.stringify({
-        expenses: pieData,
-        budgets: budgets.map(b => ({ name: b.name, limit: b.total, spent: b.spent, percent: b.percent }))
-      });
-
-      const prompt = `Context: ${dataContext}\n\nUser Question: ${userQuery}\n\nProvide a professional, concise financial advice based ONLY on this data. Use 1-2 sentences.`;
-
-      // Use Groq for financial insights
-      if (groqKey) {
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: [{ role: "system", content: "You are a concise financial advisor." }, { role: "user", content: prompt }]
-          })
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setQueryResponse(data.choices[0].message.content);
-        } else {
-            throw new Error("AI provider failed");
-        }
-      }
-    } catch (e) {
-      setQueryResponse("Unable to get AI insight right now. Please check your connection.");
-    } finally {
-      setIsGenerating(false);
-      setUserQuery("");
-    }
-  };
 
   const topCategoryStr = pieData.sort((a,b) => b.value - a.value)[0]?.name || "N/A";
   const topCategoryVal = pieData.sort((a,b) => b.value - a.value)[0]?.value || 0;

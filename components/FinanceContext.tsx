@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { LayoutGrid, ShoppingCart, Coffee, Target } from "lucide-react";
 
 export type Transaction = {
   id: number;

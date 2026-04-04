@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { MessageSquareText, Send, Loader2 } from "lucide-react";
+import { MessageSquareText, Send } from "lucide-react";
 
 export default function AiChatPage() {
   const [messages, setMessages] = useState([
