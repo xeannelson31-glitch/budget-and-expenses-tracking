@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 export type Transaction = {
   id: number;
@@ -67,20 +68,50 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     { name: "Entertainment", spent: 550, total: 1000, percent: 55, color: "bg-slate-500", iconName: "LayoutGrid" },
   ]);
 
-  // Load from localStorage on mount
+  // Load from Supabase + localStorage on mount
   useEffect(() => {
     setIsClient(true);
-    const savedBudgets = localStorage.getItem("sb_budgets");
-    const savedTransactions = localStorage.getItem("sb_transactions");
-    const savedNotifications = localStorage.getItem("sb_notifications");
-    const savedProfile = localStorage.getItem("sb_profile");
-    const savedLastUpdated = localStorage.getItem("sb_lastUpdated");
+    const supabase = createClient();
 
-    if (savedBudgets) setBudgets(JSON.parse(savedBudgets));
-    if (savedTransactions) setTransactions(JSON.parse(savedTransactions));
-    if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
-    if (savedProfile) setUserProfilePic(savedProfile);
-    if (savedLastUpdated) setLastUpdated(savedLastUpdated);
+    const loadData = async () => {
+      // 1. Try Supabase first
+      try {
+        const { data: txData } = await supabase.from('transactions').select('*').order('date', { ascending: false });
+        if (txData && txData.length > 0) {
+          setTransactions(txData.map(t => ({
+            id: t.id,
+            name: t.description || "Unnamed",
+            amount: t.amount,
+            date: new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            category: "General",
+            type: t.type,
+            iconName: "ShoppingCart"
+          })));
+        }
+
+        const { data: bgData } = await supabase.from('budgets').select('*');
+        if (bgData && bgData.length > 0) {
+           // Mapping would happen here if we had more details
+        }
+      } catch (e) {
+        console.warn("Supabase fetch skipped or failed, using local cache.", e);
+      }
+
+      // 2. Fallback/Merge with localStorage
+      const savedBudgets = localStorage.getItem("sb_budgets");
+      const savedTransactions = localStorage.getItem("sb_transactions");
+      const savedNotifications = localStorage.getItem("sb_notifications");
+      const savedProfile = localStorage.getItem("sb_profile");
+      const savedLastUpdated = localStorage.getItem("sb_lastUpdated");
+
+      if (savedBudgets && !localStorage.getItem("sb_synced")) setBudgets(JSON.parse(savedBudgets));
+      if (savedTransactions && !localStorage.getItem("sb_synced")) setTransactions(JSON.parse(savedTransactions));
+      if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
+      if (savedProfile) setUserProfilePic(savedProfile);
+      if (savedLastUpdated) setLastUpdated(savedLastUpdated);
+    };
+
+    loadData();
   }, []);
 
   // Save to localStorage when state changes (after initial load)
