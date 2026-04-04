@@ -10,11 +10,11 @@ export default function Header() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const router = useRouter();
   const { notifications, clearNotifications, userProfilePic, setUserProfilePic, budgets, transactions } = useFinance();
-  
+
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  
+
   const [searchQuery, setSearchQuery] = useState("");
 
   const searchResults = searchQuery ? [
@@ -31,7 +31,7 @@ export default function Header() {
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
-  
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
@@ -56,35 +56,35 @@ export default function Header() {
           <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#1C695D]/60 mt-1">{formatDate(currentTime)}</span>
         </div>
       )}
-      
+
       <div className="flex items-center gap-3 relative">
         {/* Search */}
         {showSearch && (
           <div className="absolute top-14 right-10 sm:right-16 flex flex-col items-end animate-scale-in z-50">
             <div className="flex items-center shadow-lg w-64 sm:w-80">
-              <input 
-                type="text" 
-                placeholder="Search budgets and transactions..." 
-                value={searchQuery} 
-                onChange={(e) => setSearchQuery(e.target.value)} 
-                className="w-full bg-white/95 rounded-l-2xl px-5 py-3 text-sm font-bold outline-none border border-primary/20 backdrop-blur-sm focus:border-primary/50 shadow-inner" 
-                autoFocus 
+              <input
+                type="text"
+                placeholder="Search budgets and transactions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white/95 rounded-l-2xl px-5 py-3 text-sm font-bold outline-none border border-primary/20 backdrop-blur-sm focus:border-primary/50 shadow-inner"
+                autoFocus
               />
-              <button onClick={() => {setShowSearch(false); setSearchQuery("");}} className="bg-primary text-white px-5 py-3 rounded-r-2xl text-sm font-black uppercase hover:bg-[#134D44] transition-colors border border-primary h-full">X</button>
+              <button onClick={() => { setShowSearch(false); setSearchQuery(""); }} className="bg-primary text-white px-5 py-3 rounded-r-2xl text-sm font-black uppercase hover:bg-[#134D44] transition-colors border border-primary h-full">X</button>
             </div>
-            
+
             {searchQuery.length > 0 && (
               <div className="mt-2 w-full bg-white rounded-2xl shadow-2xl border border-primary/10 overflow-hidden flex flex-col">
                 {searchResults.length === 0 ? (
                   <div className="p-4 text-center text-xs font-bold text-text-muted opacity-70">No results found</div>
                 ) : (
                   searchResults.map((res, i) => (
-                    <button 
-                      key={i} 
+                    <button
+                      key={i}
                       onClick={() => {
-                         setShowSearch(false); 
-                         setSearchQuery(""); 
-                         router.push(res.link);
+                        setShowSearch(false);
+                        setSearchQuery("");
+                        router.push(res.link);
                       }}
                       className="text-left px-4 py-3 hover:bg-slate-50 border-b border-primary/5 last:border-none transition-colors group flex flex-col"
                     >
@@ -97,20 +97,20 @@ export default function Header() {
             )}
           </div>
         )}
-        <button onClick={() => {setShowSearch(!showSearch); setShowNotifs(false); setShowProfile(false);}} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/10 transition-colors relative group">
+        <button onClick={() => { setShowSearch(!showSearch); setShowNotifs(false); setShowProfile(false); }} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/10 transition-colors relative group">
           <Search className="w-5 h-5 text-text-muted group-hover:text-primary" />
         </button>
 
         {/* Notifications */}
-        <button onClick={() => {setShowNotifs(!showNotifs); setShowSearch(false); setShowProfile(false);}} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/10 transition-colors relative group">
+        <button onClick={() => { setShowNotifs(!showNotifs); setShowSearch(false); setShowProfile(false); }} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/10 transition-colors relative group">
           <Bell className="w-5 h-5 text-text-muted group-hover:text-primary" />
           {unreadCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full border-2 border-white"></span>}
         </button>
         {showNotifs && (
           <div className="absolute top-full right-8 mt-4 w-72 bg-white rounded-2xl shadow-2xl border border-primary/10 p-4 animate-scale-in flex flex-col gap-3 z-50">
             <div className="flex justify-between items-center border-b border-primary/5 pb-2">
-               <h4 className="text-sm font-black text-foreground">Notifications</h4>
-               {unreadCount > 0 && <button onClick={clearNotifications} className="text-[10px] font-bold text-primary uppercase hover:underline">Clear All</button>}
+              <h4 className="text-sm font-black text-foreground">Notifications</h4>
+              {unreadCount > 0 && <button onClick={clearNotifications} className="text-[10px] font-bold text-primary uppercase hover:underline">Clear All</button>}
             </div>
             <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
               {notifications.length === 0 ? (
@@ -127,15 +127,15 @@ export default function Header() {
           </div>
         )}
 
-        <div onClick={() => {setShowProfile(!showProfile); setShowSearch(false); setShowNotifs(false);}} className="w-10 h-10 rounded-full bg-primary/20 border-2 border-primary/10 overflow-hidden cursor-pointer hover:border-primary/40 transition-all flex items-center justify-center">
-            {userProfilePic ? <Image src={userProfilePic} alt="User Profile" width={40} height={40} className="w-full h-full object-cover" unoptimized /> : <User className="w-6 h-6 text-primary" />}
+        <div onClick={() => { setShowProfile(!showProfile); setShowSearch(false); setShowNotifs(false); }} className="w-10 h-10 rounded-full bg-primary/20 border-2 border-primary/10 overflow-hidden cursor-pointer hover:border-primary/40 transition-all flex items-center justify-center">
+          {userProfilePic ? <Image src={userProfilePic} alt="User Profile" width={40} height={40} className="w-full h-full object-cover" unoptimized /> : <User className="w-6 h-6 text-primary" />}
         </div>
         {showProfile && (
           <div className="absolute top-full right-0 mt-4 w-64 bg-white rounded-2xl shadow-2xl border border-primary/10 p-4 animate-scale-in flex flex-col gap-4 z-50">
             <h4 className="text-sm font-black text-foreground border-b border-primary/5 pb-2">Profile Picture</h4>
             <div className="flex flex-col gap-3">
-              <input 
-                type="file" 
+              <input
+                type="file"
                 accept="image/*"
                 id="profileUpload"
                 className="hidden"
@@ -151,7 +151,7 @@ export default function Header() {
                   }
                 }}
               />
-              <label 
+              <label
                 htmlFor="profileUpload"
                 className="w-full bg-primary text-white rounded-xl py-2.5 text-xs font-black uppercase tracking-widest hover:bg-[#134D44] transition-colors cursor-pointer text-center block"
               >
