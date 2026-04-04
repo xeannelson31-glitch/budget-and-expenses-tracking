@@ -99,7 +99,7 @@ export default function Analytics() {
   const topCategoryStr = pieData.sort((a,b) => b.value - a.value)[0]?.name || "N/A";
   const topCategoryVal = pieData.sort((a,b) => b.value - a.value)[0]?.value || 0;
 
-  const currentMonthName = new Date().toLocaleString('default', { month: 'short' }).toUpperCase();
+  const currentMonthName = new Date().toLocaleString('en-US', { month: 'short' }).toUpperCase();
   const currentMonthValue = budgets.reduce((acc, b) => acc + b.total, 0);
   const currentMonthSpent = budgets.reduce((acc, b) => acc + b.spent, 0);
 
