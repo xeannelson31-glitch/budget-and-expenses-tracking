@@ -69,8 +69,10 @@ export default function AiChatPage() {
       setMessages(prev => [...prev, { role: "assistant", content: botReply }]);
     } catch (error) {
       const e = error instanceof Error ? error : new Error(String(error));
-      console.error("Chat Error:", e);
-      setMessages(prev => [...prev, { role: "assistant", content: `Oops! Connecting to AI failed. Reason: ${e.message || "Unknown context error"}` }]);
+      const errMsg = e.message === "Missing Groq API key" 
+        ? "AI insight is disabled: Missing NEXT_PUBLIC_GROQ_API_KEY in environment variables." 
+        : `Oops! Connecting to AI failed. Reason: ${e.message}`;
+      setMessages(prev => [...prev, { role: "assistant", content: errMsg }]);
     } finally {
       setIsLoading(false);
     }

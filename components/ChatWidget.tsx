@@ -114,7 +114,10 @@ Actions:
       setMessages(prev => [...prev, { role: "assistant", content: botReply }]);
     } catch (error) {
       const e = error instanceof Error ? error : new Error(String(error));
-      setMessages(prev => [...prev, { role: "assistant", content: `Oops! AI failed. Reason: ${e.message}` }]);
+      const errMsg = e.message === "Missing Groq API key" 
+        ? "AI insight is disabled: Missing NEXT_PUBLIC_GROQ_API_KEY in environment variables." 
+        : `Oops! AI failed. Reason: ${e.message}`;
+      setMessages(prev => [...prev, { role: "assistant", content: errMsg }]);
     } finally {
       setIsLoading(false);
     }
