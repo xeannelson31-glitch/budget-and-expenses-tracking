@@ -6,7 +6,7 @@ import { useFinance } from "./FinanceContext";
 import Link from "next/link";
 
 export default function ChatWidget() {
-  const { addTransaction, addBudget, updateBudgetSpent } = useFinance();
+  const { addTransaction, addBudget, updateBudgetSpent, updateBudget, deleteBudget, transactions, budgets } = useFinance();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [input, setInput] = useState("");
@@ -32,8 +32,27 @@ export default function ChatWidget() {
     setIsLoading(true);
 
     try {
+      const totalIncome = transactions
+        .filter(tx => tx.type === "income")
+        .reduce((acc, tx) => acc + Math.abs(tx.amount), 0);
+
+      const totalExpense = transactions
+        .filter(tx => tx.type === "expense")
+        .reduce((acc, tx) => acc + Math.abs(tx.amount), 0);
+
+      const totalBalance = totalIncome - totalExpense;
+
+      const budgetSummary = budgets.map(b => `${b.name}: ₱${b.spent} spent of ₱${b.total}`).join(", ");
+
       const systemPrompt = `You are SmartBudget AI. You MUST stay strictly relevant to the user's question. 
 Keep your responses short and professional. 
+
+Current Financial Status:
+- Total Balance: ₱${totalBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+- Total Income: ₱${totalIncome.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+- Total Expenses: ₱${totalExpense.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+- Budgets: ${budgetSummary || "No budgets set yet."}
+
 If the user asks you to record a transaction (income or expense), add a budget, or update/subtract from a budget, reply nicely, then append a markdown JSON codeblock.
 
 Actions:
@@ -48,12 +67,22 @@ Actions:
 3. UPDATE_BUDGET_SPENT: When the user says they spent money from an existing budget. 
 \`\`\`json
 {"action":"UPDATE_BUDGET_SPENT","data":{"name":"Food & Groceries","amount":50}}
+\`\`\`
+4. DELETE_BUDGET: To remove a budget category.
+\`\`\`json
+{"action":"DELETE_BUDGET","data":{"name":"Entertainment"}}
+\`\`\`
+5. UPDATE_BUDGET: To change a budget's limit or name.
+\`\`\`json
+{"action":"UPDATE_BUDGET","data":{"name":"Travel","total":1500}}
 \`\`\``;
 
+      const groqApiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim();
       let botReply = "";
 
-      const groqApiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim();
-      if (!groqApiKey) throw new Error("Missing Groq API key");
+      if (!groqApiKey) {
+        throw new Error("Missing Groq API key.");
+      }
 
       const chatHistory = messages
         .filter(m => !m.content.includes("```json"))

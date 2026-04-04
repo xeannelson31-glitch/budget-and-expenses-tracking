@@ -2,8 +2,10 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { MessageSquareText, Send } from "lucide-react";
+import { useFinance } from "@/components/FinanceContext";
 
 export default function AiChatPage() {
+  const { transactions, budgets } = useFinance();
   const [messages, setMessages] = useState([
     { role: "assistant", content: "Hello! I'm your SmartBudget AI assistant. How can I help you analyze your finances today?" }
   ]);
@@ -33,11 +35,32 @@ export default function AiChatPage() {
     setIsLoading(true);
 
     try {
-      const systemPrompt = "You are SmartBudget AI, a highly intelligent, concise, and professional financial advisor. You help users construct budgets, analyze expenses, and provide actionable money-saving tips.";
+      const totalIncome = transactions
+        .filter(tx => tx.type === "income")
+        .reduce((acc, tx) => acc + Math.abs(tx.amount), 0);
+
+      const totalExpense = transactions
+        .filter(tx => tx.type === "expense")
+        .reduce((acc, tx) => acc + Math.abs(tx.amount), 0);
+
+      const totalBalance = totalIncome - totalExpense;
+
+      const budgetSummary = budgets.map(b => `${b.name}: ₱${b.spent} spent of ₱${b.total}`).join(", ");
+
+      const systemPrompt = `You are SmartBudget AI, a highly intelligent, concise, and professional financial advisor. You help users construct budgets, analyze expenses, and provide actionable money-saving tips.
+
+Current Financial Status:
+- Total Balance: ₱${totalBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+- Total Income: ₱${totalIncome.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+- Total Expenses: ₱${totalExpense.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+- Budgets: ${budgetSummary || "No budgets set yet."}`;
       let botReply = "";
 
       const groqApiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim();
-      if (!groqApiKey) throw new Error("Missing Groq API key");
+
+      if (!groqApiKey) {
+        throw new Error("Missing Groq API key.");
+      }
 
       const chatHistory = messages.map(m => ({ 
         role: m.role === "assistant" ? "assistant" : "user", 

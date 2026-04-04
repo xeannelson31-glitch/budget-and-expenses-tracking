@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RePieChart, Pie } from "recharts";
 import { TrendingUp, Loader2 } from "lucide-react";
 import { useFinance } from "@/components/FinanceContext";
+import { useMemo } from "react";
 
 export default function Analytics() {
   const { transactions, budgets, lastUpdated } = useFinance();
@@ -27,29 +28,34 @@ export default function Analytics() {
   const netWorth = totalIncome - totalExpense;
 
   // Category spending for Pie Chart
-  const categorySpending = transactions
-    .filter(tx => tx.type === "expense")
-    .reduce((acc, tx) => {
-      acc[tx.category] = (acc[tx.category] || 0) + Math.abs(tx.amount);
-      return acc;
-    }, {} as Record<string, number>);
+  const categorySpending = useMemo(() => {
+     return transactions
+      .filter(tx => tx.type === "expense")
+      .reduce((acc, tx) => {
+        acc[tx.category] = (acc[tx.category] || 0) + Math.abs(tx.amount);
+        return acc;
+      }, {} as Record<string, number>);
+  }, [transactions]);
 
   const pieColors = ["#006D77", "#2B4C5F", "#FF7D7D", "#99E6F0", "#F4A261", "#E76F51"];
-  const pieData = Object.entries(categorySpending).map(([name, value], idx) => ({
-    name,
-    value,
-    color: pieColors[idx % pieColors.length]
-  }));
+  
+  const pieData = useMemo(() => {
+    return Object.entries(categorySpending).map(([name, value], idx) => ({
+      name,
+      value,
+      color: pieColors[idx % pieColors.length]
+    }));
+  }, [categorySpending]);
 
   // Generate AI Summary Effect
   useEffect(() => {
     const generateSummary = async () => {
-      if (pieData.length === 0 || isGenerating) return;
+      // Don't call if isGenerating is true, or if summary already exists for this state
+      if (pieData.length === 0 || isGenerating || aiSummary) return;
       
       setIsGenerating(true);
       try {
-        const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim();
-        if (!groqKey) return;
+        const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim() || "";
 
         const dataContext = JSON.stringify({
           expenses: pieData,
@@ -71,8 +77,12 @@ export default function Analytics() {
           },
           body: JSON.stringify({
             model: "llama-3.3-70b-versatile",
-            messages: [{ role: "system", content: "You are a financial analyst. Always reply in JSON." }, { role: "user", content: prompt }],
-            response_format: { type: "json_object" }
+            messages: [
+              { role: "system", content: "You are a financial analyst. Always reply in JSON format with exactly three fields: why, how, and what." }, 
+              { role: "user", content: prompt }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.1
           })
         });
 
@@ -82,18 +92,19 @@ export default function Analytics() {
         }
 
         const data = await response.json();
-        const result = JSON.parse(data.choices[0].message.content);
+        const content = data.choices[0].message.content;
+        const result = typeof content === 'string' ? JSON.parse(content) : content;
         setAiSummary(result);
-      } catch {
-        console.error("AI Summary generation failed");
+      } catch (e: any) {
+        console.warn("AI Strategic Insight generation skipped or failed:", e?.message || e);
       } finally {
         setIsGenerating(false);
       }
     };
 
-    const timer = setTimeout(generateSummary, 1000); // Debounce
+    const timer = setTimeout(generateSummary, 1500); // 1.5s delay to avoid spamming
     return () => clearTimeout(timer);
-  }, [transactions, budgets, pieData, isGenerating]);
+  }, [pieData, budgets, aiSummary]); // Removed isGenerating and transactions, as pieData covers transactions. aiSummary added to prevent double-calls.
 
 
   const topCategoryStr = pieData.sort((a,b) => b.value - a.value)[0]?.name || "N/A";

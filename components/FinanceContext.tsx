@@ -31,9 +31,11 @@ export type Notification = {
 type FinanceContextType = {
   transactions: Transaction[];
   addTransaction: (tx: Omit<Transaction, "id">) => void;
+  updateTransaction: (id: number, tx: Partial<Transaction>) => void;
   deleteTransaction: (id: number) => void;
   budgets: Budget[];
   addBudget: (bg: Budget) => void;
+  updateBudget: (name: string, updatedBg: Partial<Budget>) => void;
   deleteBudget: (name: string) => void;
   updateBudgetSpent: (name: string, amount: number) => void;
   
@@ -140,6 +142,12 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     markUpdated();
   };
 
+  const updateTransaction = (id: number, updatedTx: Partial<Transaction>) => {
+    setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updatedTx } as Transaction : t));
+    addNotification(`Updated transaction: ${updatedTx.name || "Transaction"}`);
+    markUpdated();
+  };
+
   const deleteTransaction = (id: number) => {
     setTransactions(prev => {
       const tx = prev.find(t => t.id === id);
@@ -152,6 +160,22 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const addBudget = (bg: Budget) => {
     setBudgets(prev => [{ ...bg }, ...prev]);
     addNotification(`Created budget category: ${bg.name}`);
+    markUpdated();
+  };
+
+  const updateBudget = (name: string, updatedBg: Partial<Budget>) => {
+    setBudgets(prev => prev.map(b => {
+      if (b.name.toLowerCase() === name.toLowerCase()) {
+        const newBudget = { ...b, ...updatedBg };
+        // Recalculate percent if spent or total changed
+        const newTotal = newBudget.total;
+        const newSpent = newBudget.spent;
+        newBudget.percent = newTotal > 0 ? Math.round((newSpent / newTotal) * 100) : 0;
+        return newBudget;
+      }
+      return b;
+    }));
+    addNotification(`Updated budget category: ${updatedBg.name || name}`);
     markUpdated();
   };
 
@@ -182,8 +206,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <FinanceContext.Provider value={{ 
-      transactions, addTransaction, deleteTransaction, 
-      budgets, addBudget, deleteBudget, updateBudgetSpent,
+      transactions, addTransaction, updateTransaction, deleteTransaction, 
+      budgets, addBudget, updateBudget, deleteBudget, updateBudgetSpent,
       notifications, clearNotifications,
       userProfilePic, setUserProfilePic,
       lastUpdated, updateBudgetIcon

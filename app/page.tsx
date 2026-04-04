@@ -16,11 +16,11 @@ export default function Dashboard() {
 
   const totalIncome = recentActivity
     .filter(tx => tx.type === "income")
-    .reduce((acc, tx) => acc + tx.amount, 0);
+    .reduce((acc, tx) => acc + Math.abs(tx.amount), 0);
 
-  const totalExpense = Math.abs(recentActivity
+  const totalExpense = recentActivity
     .filter(tx => tx.type === "expense")
-    .reduce((acc, tx) => acc + tx.amount, 0));
+    .reduce((acc, tx) => acc + Math.abs(tx.amount), 0);
 
   const totalBalance = totalIncome - totalExpense;
   
