@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFinance, Budget, Transaction } from "@/components/FinanceContext";
+import { cn } from "@/lib/utils";
 
 export function getIcon(name?: string) {
   switch (name) {
@@ -210,8 +211,4 @@ export default function Dashboard() {
       </section>
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

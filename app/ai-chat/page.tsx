@@ -40,14 +40,12 @@ export default function AiChatPage() {
       // Add the latest user message
       chatHistory.push({ role: "user", content: userMessage });
 
-      const response = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
           messages: chatHistory
         })
       });
@@ -62,7 +60,8 @@ export default function AiChatPage() {
       const botReply = data.choices?.[0]?.message?.content || "Sorry, I couldn't process that.";
       
       setMessages(prev => [...prev, { role: "assistant", content: botReply }]);
-    } catch (e: any) {
+    } catch (err: unknown) {
+      const e = err as Error;
       console.error("Chat Error:", e);
       setMessages(prev => [...prev, { role: "assistant", content: `Oops! Connecting to Groq failed. Reason: ${e.message || "Unknown context error"}` }]);
     } finally {

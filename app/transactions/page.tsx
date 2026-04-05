@@ -4,6 +4,7 @@ import { Search, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useFinance, Transaction } from "@/components/FinanceContext";
 import { getIcon } from "@/app/page";
+import { cn } from "@/lib/utils";
 
 const filters = ["All", "Income", "Expenses", "Recurring"];
 
@@ -193,8 +194,4 @@ export default function Transactions() {
       </section>
     </div>
   );
-}
-
-function cn(...inputs: (string | number | boolean | undefined | null)[]) {
-  return inputs.filter(Boolean).join(' ');
 }

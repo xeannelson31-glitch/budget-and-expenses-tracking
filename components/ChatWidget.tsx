@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { MessageSquareText, Send, X } from "lucide-react";
 import { useFinance } from "./FinanceContext";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function ChatWidget() {
   const { addTransaction, addBudget, updateBudgetSpent } = useFinance();
@@ -58,16 +59,13 @@ Actions:
 
       chatHistory.push({ role: "user", content: userMessage });
 
-      const response = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: chatHistory,
-          temperature: 0.2
+          messages: chatHistory
         })
       });
 

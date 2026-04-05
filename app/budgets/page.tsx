@@ -4,6 +4,7 @@ import { Lightbulb, Plus, X, Trash2, Search } from "lucide-react";
 import { useState } from "react";
 import { useFinance } from "@/components/FinanceContext";
 import { getIcon } from "@/app/page";
+import { cn } from "@/lib/utils";
 
 export default function Budgets() {
   const { budgets, addBudget, deleteBudget, updateBudgetSpent, addTransaction, updateBudgetIcon } = useFinance();
@@ -374,8 +375,4 @@ export default function Budgets() {
       {/* Floating Action Button Removed */}
     </div>
   );
-}
-
-function cn(...inputs: (string | number | boolean | undefined | null)[]) {
-  return inputs.filter(Boolean).join(' ');
 }

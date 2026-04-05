@@ -1,7 +1,8 @@
 "use client";
 
 import { Bell, User, Search } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import { useState, useEffect } from "react";
 import { useFinance } from "./FinanceContext";
 import { useRouter } from "next/navigation";
 
@@ -15,7 +16,6 @@ export default function Header() {
   const [showProfile, setShowProfile] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [tempPicUrl, setTempPicUrl] = useState("");
 
   const searchResults = searchQuery ? [
     ...budgets.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase())).map(b => ({ type: 'budget', name: b.name, category: 'Budget Category', link: '/budgets' })),
@@ -129,7 +129,7 @@ export default function Header() {
 
         <div onClick={() => {setShowProfile(!showProfile); setShowSearch(false); setShowNotifs(false);}} className="w-10 h-10 rounded-full bg-primary/20 border-2 border-primary/10 overflow-hidden cursor-pointer hover:border-primary/40 transition-all">
           <div className="w-full h-full flex items-center justify-center bg-slate-100">
-            {userProfilePic ? <img src={userProfilePic} alt="User Profile" className="w-full h-full object-cover" /> : <User className="w-6 h-6 text-primary" />}
+            {userProfilePic ? <Image src={userProfilePic} alt="User Profile" className="w-full h-full object-cover" width={40} height={40} unoptimized /> : <User className="w-6 h-6 text-primary" />}
           </div>
         </div>
         {showProfile && (

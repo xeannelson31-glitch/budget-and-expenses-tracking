@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell, PieChart as R
 import { Sparkles, TrendingUp, Loader2 } from "lucide-react";
 import { useFinance } from "@/components/FinanceContext";
 import { useState, useEffect, useMemo } from "react";
+import { cn } from "@/lib/utils";
 
 export default function Analytics() {
   const { transactions, budgets, lastUpdated } = useFinance();
@@ -48,8 +49,6 @@ export default function Analytics() {
       
       setIsGenerating(true);
       try {
-        const groqKey = process.env.NEXT_PUBLIC_GROQ_API_KEY?.trim() || "";
-
         const dataContext = JSON.stringify({
           expenses: pieData,
           budgets: budgets.map(b => ({ name: b.name, limit: b.total, spent: b.spent, percent: b.percent }))
@@ -62,14 +61,12 @@ export default function Analytics() {
         3. WHAT: Give one specific, actionable action the user should take right now.
         Format your response as a JSON object: {"why": "...", "how": "...", "what": "..."}`;
 
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        const response = await fetch("/api/chat", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${groqKey}`
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
             messages: [
               { role: "system", content: "You are a financial analyst. Always reply in JSON format with exactly three fields: why, how, and what." }, 
               { role: "user", content: prompt }
@@ -84,7 +81,7 @@ export default function Analytics() {
         }
 
         const data = await response.json();
-        const content = data.choices[0].message.content;
+        const content = data.choices?.[0]?.message?.content || {};
         const result = typeof content === 'string' ? JSON.parse(content) : content;
         setAiSummary(result);
       } catch (err: unknown) {
@@ -268,8 +265,4 @@ export default function Analytics() {
       </section>
     </div>
   );
-}
-
-function cn(...inputs: (string | number | boolean | undefined | null)[]) {
-  return inputs.filter(Boolean).join(' ');
 }
